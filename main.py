@@ -1,6 +1,8 @@
 from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
 
 
 if __name__ == "__main__":
-    driver = webdriver.Chrome(ChromeDriverManager().install())
+    browser = webdriver.Chrome()
+
+    browser.get("https://www.google.com")
+    browser.quit()
