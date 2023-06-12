@@ -12,6 +12,10 @@ if __name__ == "__main__":
 
     cafe_url = os.getenv("CAFE_URL")
 
-    scraper = NaverCafeScraper(url=os.getenv("CAFE_URL"))
+    scraper = NaverCafeScraper(
+        url=os.getenv("CAFE_URL"),
+        user_id=os.getenv("USERID"),
+        password=os.getenv("PASSWORD"),
+    )
 
     scraper.scrape_author(author_name=os.getenv("AUTHOR"))
