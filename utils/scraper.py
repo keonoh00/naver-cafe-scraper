@@ -3,8 +3,10 @@
 """
 import os
 import time
+import math
 import pyperclip
 
+from PIL import Image
 
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -32,6 +34,7 @@ class NaverCafeScraper:
         self.__set_browser_options()
 
         self.browser = webdriver.Chrome(options=self.chrome_options)
+        self.browser.maximize_window()
 
         self.url = url
         self.user_id = user_id
@@ -47,13 +50,22 @@ class NaverCafeScraper:
         self,
         author_name,
     ):
+        """
+        Getting post lists for author
+
+        Args:
+            author_name (str): Author name to scrape
+
+        Returns:
+            None
+        """
         self.__search_author(author_name=author_name)
 
         self.__get_post_lists(author_name=author_name)
 
     def __get_post_lists(self, author_name):
         """
-        작성자의 글 목록을 가져온다.
+        Getting post lists for author
         """
 
         print("Getting post lists for: ", author_name)
@@ -80,21 +92,77 @@ class NaverCafeScraper:
                     "td_date",
                 ).text
 
-                post_date = post_date.replace(".", "-")[:-1]
+                post_date = post_date.replace(".", "")
 
-                print("Getting post content for: ", post_date)
+                post_title = post.find_element(
+                    By.CLASS_NAME,
+                    "article",
+                ).text
+
+                print("Getting post content for: ", post_title)
 
                 clickable = post.find_element(By.CLASS_NAME, "article")
                 clickable.click()
 
                 time.sleep(1)
 
-                self.__save_post_content(post_date)
+                self.__save_post_content(post_date, post_title)
 
-                break
+                self.browser.back()
 
-    def __save_post_content(self, post_date):
-        pass
+    def __save_post_content(self, post_date, post_title):
+        """
+        Getting post content
+        """
+
+        # Get out of iframe
+        self.browser.switch_to.default_content()
+
+        # post = self.__debounced_find_element(
+        #     self.browser,
+        #     By.CLASS_NAME,
+        #     "ArticleContentBox",
+        # )
+
+        browser_height = self.browser.execute_script(
+            "return window.innerHeight",
+        )
+
+        scroll_size = self.browser.execute_script(
+            "return document.body.scrollHeight",
+        )
+        total_sections = math.ceil(scroll_size / browser_height)
+
+        if os.path.exists("temp") is False:
+            os.mkdir("temp")
+
+        for section in range(total_sections + 1):
+            self.browser.execute_script(
+                f"window.scrollTo(0, {section * browser_height})"
+            )
+            time.sleep(1)
+
+            self.browser.save_screenshot(f"temp/{section}.png")
+
+        images = [
+            Image.open(f"temp/{section}.png")
+            for section in range(
+                total_sections,
+            )
+        ]
+
+        merged_image = Image.new(
+            "RGB",
+            (images[0].width, images[0].height * len(images)),
+        )
+
+        pasting_position = 0
+
+        for image in images:
+            merged_image.paste(image, (0, pasting_position))
+            pasting_position += image.height
+
+        merged_image.save(f"temp/{post_date}-{post_title}.png")
 
     def __search_author(self, author_name):
         """
@@ -173,7 +241,7 @@ class NaverCafeScraper:
             "input_text",
         )
         id_input.click()
-        print("Entering user id: ", self.user_id)
+        print("Entering userid: ", self.user_id)
         self.__paste_to_browser(id_input, self.user_id)
 
         # Entering password
@@ -221,3 +289,34 @@ class NaverCafeScraper:
             element.send_keys(Keys.CONTROL, "v")
         else:
             element.send_keys(Keys.COMMAND, "v")
+
+
+methods = [
+    "accessible_name",
+    "aria_role",
+    "clear",
+    "click",
+    "find_element",
+    "find_elements",
+    "get_attribute",
+    "get_dom_attribute",
+    "get_property",
+    "id",
+    "is_displayed",
+    "is_enabled",
+    "is_selected",
+    "location",
+    "location_once_scrolled_into_view",
+    "parent",
+    "rect",
+    "screenshot",
+    "screenshot_as_base64",
+    "screenshot_as_png",
+    "send_keys",
+    "shadow_root",
+    "size",
+    "submit",
+    "tag_name",
+    "text",
+    "value_of_css_property",
+]
