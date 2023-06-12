@@ -1,11 +1,18 @@
 """
 네이버 카페 글 스크래퍼
 """
+import os
 import time
+import pyperclip
+
+
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.keys import Keys
 
 
 class NaverCafeScraper:
@@ -23,7 +30,11 @@ class NaverCafeScraper:
         user_id,
         password,
     ):
-        self.browser = webdriver.Chrome()
+        self.chrome_options = Options()
+        self.__set_browser_options()
+
+        self.browser = webdriver.Chrome(options=self.chrome_options)
+
         self.url = url
         self.user_id = user_id
         self.password = password
@@ -46,41 +57,55 @@ class NaverCafeScraper:
             self.browser,
             By.ID,
             "cafe-search",
+            30,
         )
-        search_box.find_element(By.ID, "topLayerQueryInput").send_keys(
-            author_name,
-        )
+
+        search_input = search_box.find_element(By.ID, "topLayerQueryInput")
+        search_input.click()
+        self.__paste_to_browser(search_input, author_name)
+        print("Searching for author: ", author_name)
+
         search_box.find_element(By.CLASS_NAME, "btn").click()
+
+    def __set_browser_options(self):
+        # self.chrome_options.add_experimental_option(
+        #     "detach", True
+        # )  # Keep browser open after script ends
+        self.chrome_options.add_experimental_option(
+            "excludeSwitches", ["enable-logging"]
+        )  # Remove selenium logging
 
     def __login(self):
         self.browser.find_element(By.CLASS_NAME, "gnb_btn_login").click()
 
+        # Entering user id
         id_row = self.__debounced_find_element(
             self.browser,
             By.ID,
             "id_line",
         )
-
-        pw_row = self.__debounced_find_element(
-            self.browser,
-            By.ID,
-            "pw_line",
-        )
-
         id_input = self.__debounced_find_element(
             id_row,
             By.CLASS_NAME,
             "input_text",
         )
-        id_input.send_keys(self.user_id)
+        id_input.click()
+        print("Entering user id: ", self.user_id)
+        self.__paste_to_browser(id_input, self.user_id)
 
+        # Entering password
+        pw_row = self.__debounced_find_element(
+            self.browser,
+            By.ID,
+            "pw_line",
+        )
         pw_input = self.__debounced_find_element(
             pw_row,
             By.CLASS_NAME,
             "input_text",
         )
-
-        pw_input.send_keys(self.password)
+        pw_input.click()
+        self.__paste_to_browser(pw_input, self.password)
 
         time.sleep(1.2)
 
@@ -96,7 +121,7 @@ class NaverCafeScraper:
         time_out: int = 10,
     ):
         try:
-            time.sleep(3)
+            time.sleep(1)
             found_element = WebDriverWait(element, time_out).until(
                 expected_conditions.presence_of_element_located((by, value))
             )
@@ -104,5 +129,12 @@ class NaverCafeScraper:
 
             return found_element
 
-        except FileNotFoundError:
+        except NoSuchElementException:
             return element
+
+    def __paste_to_browser(self, element, text):
+        pyperclip.copy(text)
+        if os.name == "nt":
+            element.send_keys(Keys.CONTROL, "v")
+        else:
+            element.send_keys(Keys.COMMAND, "v")
