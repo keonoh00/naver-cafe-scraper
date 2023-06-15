@@ -61,14 +61,57 @@ class NaverCafeScraper:
         """
         self.__search_author(author_name=author_name)
 
-        self.__get_post_lists(author_name=author_name)
+        while True:
+            # Get and save the post lists from current page
+            self.__crawl_current_page(author_name=author_name)
+            is_next_page_exists = self.__next_page()
 
-    def __get_post_lists(self, author_name):
+            if not is_next_page_exists:
+                break
+
+    def __next_page(self) -> bool:
         """
-        Getting post lists for author
+        Go to next page
         """
 
-        print("Getting post lists for: ", author_name)
+        print("Going to next page")
+
+        # Go to next page
+        prev_next_container = self.__debounced_find_element(
+            self.browser,
+            By.CLASS_NAME,
+            "prev-next",
+        )
+
+        current_page_idx = int(
+            prev_next_container.find_element(
+                By.CLASS_NAME,
+                "on",
+            ).text
+        )
+
+        next_page_idx = current_page_idx + 1
+
+        possible_pages = prev_next_container.find_elements(By.TAG_NAME, "a")
+
+        for page in possible_pages:
+            if page.text == str(next_page_idx):
+                next_page = page
+                break
+
+        if next_page is None:
+            return False
+
+        next_page.click()
+
+        time.sleep(1)
+
+        return True
+
+    def __crawl_current_page(self, author_name):
+        """
+        Getting post lists for current page
+        """
 
         posts_containers_with_header = self.browser.find_elements(
             By.CLASS_NAME,
@@ -82,47 +125,57 @@ class NaverCafeScraper:
             posts = posts_container.find_elements(By.TAG_NAME, "tr")
 
             for post in posts:
-                author = post.find_element(By.CLASS_NAME, "td_name").text
-                # Double check the author name
-                if author != author_name:
-                    continue
+                self.__crawl_post_content(post, author_name)
 
-                post_date = post.find_element(
-                    By.CLASS_NAME,
-                    "td_date",
-                ).text
+    def __crawl_post_content(self, post, author_name):
+        """
+        Getting post content
+        """
+        print(1)
 
-                post_date = post_date.replace(".", "")
+        td_author = post.find_element(By.CLASS_NAME, "p-nick")
+        author = td_author.find_element(By.TAG_NAME, "a").text
+        # Double check the author name
 
-                post_title = post.find_element(
-                    By.CLASS_NAME,
-                    "article",
-                ).text
+        print(2)
+        if author != author_name:
+            return
 
-                print("Getting post content for: ", post_title)
+        print(3)
+        post_date = post.find_element(
+            By.CLASS_NAME,
+            "td_date",
+        ).text
 
-                clickable = post.find_element(By.CLASS_NAME, "article")
-                clickable.click()
+        print(4)
 
-                time.sleep(1)
+        post_date = post_date.replace(".", "")
 
-                self.__save_post_content(post_date, post_title)
+        post_title = post.find_element(
+            By.CLASS_NAME,
+            "article",
+        ).text
 
-                self.browser.back()
+        print(5)
+
+        clickable = post.find_element(By.CLASS_NAME, "article")
+
+        print(6)
+        clickable.click()
+
+        print(7)
+        time.sleep(1)
+
+        self.__save_post_content(post_date, post_title)
+
+        print(8)
+
+        self.browser.back()
 
     def __save_post_content(self, post_date, post_title):
         """
         Getting post content
         """
-
-        # Get out of iframe
-        self.browser.switch_to.default_content()
-
-        # post = self.__debounced_find_element(
-        #     self.browser,
-        #     By.CLASS_NAME,
-        #     "ArticleContentBox",
-        # )
 
         browser_height = self.browser.execute_script(
             "return window.innerHeight",
@@ -216,7 +269,7 @@ class NaverCafeScraper:
 
         self.browser.find_element(By.CLASS_NAME, "btn-search-green").click()
 
-        time.sleep(10)
+        time.sleep(3)
 
     def __set_browser_options(self):
         # self.chrome_options.add_experimental_option(
