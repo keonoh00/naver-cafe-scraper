@@ -125,24 +125,13 @@ class NaverCafeScraper:
             posts = posts_container.find_elements(By.TAG_NAME, "tr")
 
             for post in posts:
-                self.__crawl_post_content(post, author_name)
+                self.__crawl_post_content(post)
+                self.browser.execute_script("window.history.go(-1)")
 
-    def __crawl_post_content(self, post, author_name):
+    def __crawl_post_content(self, post):
         """
         Getting post content
         """
-
-        post_date = post.find_element(
-            By.CLASS_NAME,
-            "td_date",
-        ).text
-
-        post_date = post_date.replace(".", "")
-
-        post_title = post.find_element(
-            By.CLASS_NAME,
-            "article",
-        ).text
 
         clickable = post.find_element(By.CLASS_NAME, "article")
 
@@ -150,14 +139,33 @@ class NaverCafeScraper:
 
         time.sleep(1)
 
-        self.__save_post_content(post_date, post_title)
+        self.__save_post_content()
 
-        self.browser.back()
-
-    def __save_post_content(self, post_date, post_title):
+    def __save_post_content(self):
         """
         Getting post content
         """
+
+        post_date = (
+            self.browser.find_element(
+                By.CLASS_NAME,
+                "article_info",
+            )
+            .find_element(
+                By.CLASS_NAME,
+                "date",
+            )
+            .text
+        )
+
+        post_title = (
+            self.browser.find_element(
+                By.CLASS_NAME,
+                "title_area",
+            )
+            .find_element(By.CLASS_NAME, "title_text")
+            .text
+        )
 
         # Get out of iframe
         self.browser.switch_to.default_content()
