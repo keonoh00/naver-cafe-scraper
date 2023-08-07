@@ -30,7 +30,19 @@ class NaverCafeScraper:
         url,
         user_id,
         password,
+        save_dir="./crawl_result",
     ):
+        """
+        Args:
+            url (str): Cafe url
+            user_id (str): User ID
+            password (str): User Password
+            save_dir (str): Directory to save scraped data
+        """
+        if os.path.exists(save_dir) is False:
+            os.mkdir(save_dir)
+        self.save_dir = save_dir
+
         self.chrome_options = Options()
         self.__set_browser_options()
 
@@ -160,6 +172,7 @@ class NaverCafeScraper:
             )
             .text
         )
+        post_date = post_date.replace(".", "").replace(" ", "")
 
         post_title = (
             self.browser.find_element(
@@ -211,7 +224,7 @@ class NaverCafeScraper:
             merged_image.paste(image, (0, pasting_position))
             pasting_position += image.height
 
-        merged_image.save(f"temp/{post_date}-{post_title}.png")
+        merged_image.save(f"{self.save_dir}/{post_date}-{post_title}.png")
 
     def __search_author(self, author_name):
         """
