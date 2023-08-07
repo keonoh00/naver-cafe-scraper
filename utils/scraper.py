@@ -15,6 +15,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.remote.webdriver import WebDriver
 
 
 class NaverCafeScraper:
@@ -33,7 +34,7 @@ class NaverCafeScraper:
         self.chrome_options = Options()
         self.__set_browser_options()
 
-        self.browser = webdriver.Chrome(options=self.chrome_options)
+        self.browser: WebDriver = webdriver.Chrome(options=self.chrome_options)
         self.browser.maximize_window()
 
         self.url = url
@@ -63,7 +64,8 @@ class NaverCafeScraper:
 
         while True:
             # Get and save the post lists from current page
-            self.__crawl_current_page(author_name=author_name)
+            self.__crawl_current_page()
+
             is_next_page_exists = self.__next_page()
 
             if not is_next_page_exists:
@@ -108,10 +110,12 @@ class NaverCafeScraper:
 
         return True
 
-    def __crawl_current_page(self, author_name):
+    def __crawl_current_page(self):
         """
         Getting post lists for current page
         """
+
+        self.browser.switch_to.frame("cafe_main")
 
         posts_containers_with_header = self.browser.find_elements(
             By.CLASS_NAME,
@@ -122,24 +126,23 @@ class NaverCafeScraper:
             if posts_container.get_attribute("id") == "upperArticleList":
                 continue
 
-            posts = posts_container.find_elements(By.TAG_NAME, "tr")
+            posts_number = len(
+                posts_container.find_elements(By.CLASS_NAME, "td_article")
+            )
+            print(f"Total posts: {posts_number}")
 
-            for post in posts:
-                self.__crawl_post_content(post)
-                self.browser.execute_script("window.history.go(-1)")
+            self.browser.switch_to.default_content()
 
-    def __crawl_post_content(self, post):
-        """
-        Getting post content
-        """
-
-        clickable = post.find_element(By.CLASS_NAME, "article")
-
-        clickable.click()
-
-        time.sleep(1)
-
-        self.__save_post_content()
+            for post_idx in range(posts_number):
+                print(f"Getting post {post_idx + 1} of {posts_number}")
+                self.browser.switch_to.frame("cafe_main")
+                posts = self.browser.find_elements(By.CLASS_NAME, "td_article")
+                link = posts[post_idx].find_element(By.TAG_NAME, "a")
+                link.click()
+                time.sleep(3)
+                self.__save_post_content()
+                self.browser.back()
+                time.sleep(3)
 
     def __save_post_content(self):
         """
@@ -263,6 +266,9 @@ class NaverCafeScraper:
         self.browser.find_element(By.CLASS_NAME, "btn-search-green").click()
 
         time.sleep(3)
+
+        # Get out of iframe
+        self.browser.switch_to.default_content()
 
     def __set_browser_options(self):
         # self.chrome_options.add_experimental_option(
