@@ -18,6 +18,9 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webdriver import WebDriver
 
 
+INVALID_CHARS = [":", "/", "\\", "*", "?", "<", "|"]
+
+
 class NaverCafeScraper:
     def __init__(
         self,
@@ -211,7 +214,10 @@ class NaverCafeScraper:
             )
             .text
         )
-        post_date = post_date.replace(".", "").replace(" ", "_").replace(":", "")
+
+        for invalid_char in INVALID_CHARS:
+            post_date = post_date.replace(invalid_char, "")
+        post_date = post_date.replace(" ", "_")
 
         post_title = (
             self.browser.find_element(
