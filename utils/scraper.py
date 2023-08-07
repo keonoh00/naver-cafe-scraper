@@ -18,7 +18,29 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webdriver import WebDriver
 
 
-INVALID_CHARS = [":", "/", "\\", "*", "?", "<", "|"]
+INVALID_CHARS = [
+    "#",
+    "%",
+    "&",
+    "{",
+    "}",
+    "\\",
+    "<",
+    ">",
+    "*",
+    "?",
+    "/",
+    "$",
+    "!",
+    "'",
+    '"',
+    ":",
+    "@",
+    "+",
+    "`",
+    "|",
+    "=",
+]
 
 
 class NaverCafeScraper:
