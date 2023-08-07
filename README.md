@@ -1,25 +1,31 @@
 # Naver Cafe Scraper
 
-## Setting up `venv`
+This repository is to scrape the Naver Cafe.
 
----
+## Setup Project
 
-### 1. Python Version
+This repository is built on Python 3.8.5
 
-- You must have python version greater than 3.3
+### 1. Create `venv`
+
+You can create `venv` by following command
+
+```bash
+python -m venv venv
+```
 
 ### 2. Activate `venv`
 
-For Mac or Linux
+#### For Mac or Linux
 
 ```bash
-source ./selenium-venv/bin/activate
+source ./venv/bin/activate
 ```
 
-### For Windows
+#### For Windows
 
 ```bash
-./activate/Scripts/activate
+./venv/Scripts/activate
 ```
 
 ### 3. Install Dependencies
@@ -29,8 +35,6 @@ pip install -r requirements.txt
 ```
 
 ## How to use
-
----
 
 ### 1. Setup `.env` environment file
 
@@ -43,6 +47,7 @@ CAFE_URL=https://cafe.example.com
 USERID=your_id
 PASSWORD=your_password
 AUTHOR=author_name
+SAVE_DIR=<path to your result>
 ```
 
 ### 2. Run `main.py` file
@@ -53,4 +58,4 @@ python main.py
 
 ### 3. Check the result
 
-- You can see the result in screenshots in `result` directory
+- You can see the result in screenshots in `<path to your result>` directory
