@@ -211,7 +211,7 @@ class NaverCafeScraper:
             )
             .text
         )
-        post_date = post_date.replace(".", "").replace(" ", "")
+        post_date = post_date.replace(".", "").replace(" ", "_").replace(":", "")
 
         post_title = (
             self.browser.find_element(
