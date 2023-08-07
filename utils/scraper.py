@@ -292,7 +292,7 @@ class NaverCafeScraper:
             merged_image.paste(image, (0, pasting_position))
             pasting_position += image.height
 
-        merged_image.save(f"{self.save_dir}/{post_date}-{post_title}.png")
+        merged_image.save(f"{self.save_dir}/{post_date}_{post_title}.png")
 
     def __search_author(self, author_name):
         """
