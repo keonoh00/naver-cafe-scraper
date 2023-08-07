@@ -19,12 +19,6 @@ from selenium.webdriver.remote.webdriver import WebDriver
 
 
 class NaverCafeScraper:
-    """
-    3. 작성자의 글 목록 가져오기
-    4. 글 목록에서 글 하나씩 가져오기
-    5. 글 내용 가져오기
-    """
-
     def __init__(
         self,
         url,
@@ -76,51 +70,93 @@ class NaverCafeScraper:
 
         while True:
             # Get and save the post lists from current page
-            self.__crawl_current_page()
+            # self.__crawl_current_page()
 
-            is_next_page_exists = self.__next_page()
+            next_page_exists = self.__next_page()
 
-            if not is_next_page_exists:
-                break
+            if not next_page_exists:
+                try:
+                    self.__move_to_next_page_chunks()
+                except NotImplementedError:
+                    print("No more pages")
+                    break
 
     def __next_page(self) -> bool:
         """
         Go to next page
         """
 
-        print("Going to next page")
-
         # Go to next page
-        prev_next_container = self.__debounced_find_element(
-            self.browser,
+        self.browser.switch_to.frame("cafe_main")
+        main_area = self.browser.find_element(By.ID, "main-area")
+
+        WebDriverWait(main_area, 10).until(
+            expected_conditions.presence_of_element_located(
+                (By.CLASS_NAME, "prev-next")
+            )
+        )
+
+        prev_next_container = main_area.find_element(
             By.CLASS_NAME,
             "prev-next",
         )
-
         current_page_idx = int(
             prev_next_container.find_element(
                 By.CLASS_NAME,
                 "on",
             ).text
         )
-
         next_page_idx = current_page_idx + 1
+        print(f"Going to page {next_page_idx}")
 
         possible_pages = prev_next_container.find_elements(By.TAG_NAME, "a")
 
+        next_page = None
         for page in possible_pages:
             if page.text == str(next_page_idx):
                 next_page = page
                 break
 
         if next_page is None:
+            self.browser.switch_to.default_content()
             return False
 
         next_page.click()
 
         time.sleep(1)
 
+        self.browser.switch_to.default_content()
+
         return True
+
+    def __move_to_next_page_chunks(self):
+        time.sleep(1)
+
+        self.browser.switch_to.frame("cafe_main")
+
+        main_area = self.browser.find_element(By.ID, "main-area")
+
+        WebDriverWait(main_area, 10).until(
+            expected_conditions.presence_of_element_located(
+                (By.CLASS_NAME, "prev-next")
+            )
+        )
+
+        prev_next_container = main_area.find_element(
+            By.CLASS_NAME,
+            "prev-next",
+        )
+
+        next_page_chunk = prev_next_container.find_element(
+            By.CLASS_NAME,
+            "pgR",
+        )
+
+        next_page_chunk.click()
+
+        time.sleep(1)
+
+        self.browser.switch_to.default_content()
 
     def __crawl_current_page(self):
         """
