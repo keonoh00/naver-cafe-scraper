@@ -70,7 +70,7 @@ class NaverCafeScraper:
 
         while True:
             # Get and save the post lists from current page
-            # self.__crawl_current_page()
+            self.__crawl_current_page()
 
             next_page_exists = self.__next_page()
 
