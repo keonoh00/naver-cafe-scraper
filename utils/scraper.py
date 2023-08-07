@@ -81,6 +81,9 @@ class NaverCafeScraper:
                     print("No more pages")
                     break
 
+        self.browser.quit()
+        os.system("rm -rf temp")
+
     def __next_page(self) -> bool:
         """
         Go to next page
