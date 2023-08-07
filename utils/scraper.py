@@ -215,10 +215,6 @@ class NaverCafeScraper:
             .text
         )
 
-        for invalid_char in INVALID_CHARS:
-            post_date = post_date.replace(invalid_char, "")
-        post_date = post_date.replace(" ", "_")
-
         post_title = (
             self.browser.find_element(
                 By.CLASS_NAME,
@@ -227,6 +223,11 @@ class NaverCafeScraper:
             .find_element(By.CLASS_NAME, "title_text")
             .text
         )
+
+        for invalid_char in INVALID_CHARS:
+            post_date = post_date.replace(invalid_char, "")
+            post_title = post_title.replace(invalid_char, "")
+        post_date = post_date.replace(" ", "_")
 
         # Get out of iframe
         self.browser.switch_to.default_content()
